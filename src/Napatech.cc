@@ -79,6 +79,16 @@ void NapatechSource::Open()
 	nt_stat.u.query_v2.poll=0; // Get a new dataset
 	nt_stat.u.query_v2.clear=1; // Clear the counters for this read
 
+	// Do a dummy read of the stats API to clear the counters
+	status = NT_StatRead(stat_stream, &nt_stat);
+	if ( status != NT_SUCCESS ) {
+		NT_ExplainError(status, errorBuffer, sizeof(errorBuffer));
+		Error(errorBuffer);
+		return;
+	}
+
+	nt_stat.u.query_v2.clear=0; // Don't clear the counters again
+
 	Opened(props);
 }
 
