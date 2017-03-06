@@ -60,6 +60,9 @@ private:
 	NtNetStreamRx_t rx_stream; // Napatech stream
 	NtNetBuf_t packet_buffer; // Net buffer container. Packet data is returned in this when calling NT_NetRxGet().
 
+	NtStatStream_t stat_stream; // Napatech statistics stream
+	NtStatistics_t nt_stat; // Napatech statistics data
+
 	struct pcap_pkthdr current_hdr;
 };
 
