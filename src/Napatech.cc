@@ -131,7 +131,6 @@ bool NapatechSource::ExtractNextPacket(Packet* pkt)
 
 		if ( ! ApplyBPFFilter(current_filter, &current_hdr, data) ) {
 			DoneWithPacket();
-			// ++num_discarded;
 			continue;
 		}
 
@@ -170,9 +169,6 @@ void NapatechSource::Statistics(Stats* s)
 {
 	// Grab the counter from this plugin for how much it has seen.
 	s->received = stats.received;
-	// s->link = stats.received + num_discarded;
-	// FIXME: Need to do calls to NTAPI to get drop counters
-	// s->dropped = 0;
 
 	status = NT_StatRead(stat_stream, &nt_stat);
 	if ( status != NT_SUCCESS ) {
@@ -191,5 +187,3 @@ iosource::PktSrc* NapatechSource::InstantiateNapatech(const std::string& path, b
 {
 	return new NapatechSource(path, is_live, "napatech");
 }
-
-
