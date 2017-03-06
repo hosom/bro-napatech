@@ -52,7 +52,7 @@ void NapatechSource::Open()
 {
 	// Last argument is the HBA - Host Buffer Allowance, or the amount of the Host Buffer that
 	// can be held back. Need to createa  BIF to configure this.
-	status = NT_NetRxOpen(&rx_stream, "BroStream", NT_NET_INTERFACE_PACKET, stream_id, 50);
+	status = NT_NetRxOpen(&rx_stream, "BroStream", NT_NET_INTERFACE_PACKET, stream_id, 100);
 	if ( status != NT_SUCCESS) {
 		Info("Failed to open stream");
 		NT_ExplainError(status, errorBuffer, sizeof(errorBuffer));
