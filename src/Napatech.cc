@@ -64,6 +64,21 @@ void NapatechSource::Open()
 	props.is_live = true;
 	props.link_type = DLT_EN10MB;
 
+	// Open a statistics stream
+	// Napatech NICs track what gets collected from a stream and what does not.
+	// Because of this, we can move lots of the stats tracking out of the plugin.
+	status = NT_StatOpen(&stat_stream, "BroStats");
+	if ( status != NT_SUCCESS ) {
+		NT_ExplainError(status, errorBuffer, sizeof(errorBuffer));
+		Error(errorBuffer);
+		return;
+	}
+
+	// Read Statistics from Napatech API
+	nt_stat.cmd=NT_STATISTICS_READ_CMD_QUERY_V2;
+	nt_stat.u.query_v2.poll=0; // Get a new dataset
+	nt_stat.u.query_v2.clear=1; // Clear the counters for this read
+
 	Opened(props);
 }
 
@@ -72,6 +87,15 @@ void NapatechSource::Close()
 {
 	// Close configuration stream, release the host buffer, and remove all assigned NTPL assignments.
 	NT_NetRxClose(rx_stream);
+
+	// Close the network statistics stream
+	status = NT_StatClose(stat_stream);
+	if ( status != NT_SUCCESS ) {
+                NT_ExplainError(status, errorBuffer, sizeof(errorBuffer));
+                Error(errorBuffer);
+                return;
+	}
+
 	NT_Done();
 }
 
@@ -97,7 +121,7 @@ bool NapatechSource::ExtractNextPacket(Packet* pkt)
 
 		if ( ! ApplyBPFFilter(current_filter, &current_hdr, data) ) {
 			DoneWithPacket();
-			++num_discarded;
+			// ++num_discarded;
 			continue;
 		}
 
@@ -134,22 +158,11 @@ bool NapatechSource::SetFilter(int index)
 
 void NapatechSource::Statistics(Stats* s)
 {
+	// Grab the counter from this plugin for how much it has seen.
 	s->received = stats.received;
-	s->link = stats.received + num_discarded;
+	// s->link = stats.received + num_discarded;
 	// FIXME: Need to do calls to NTAPI to get drop counters
-	s->dropped = 0;
-
-	status = NT_StatOpen(&stat_stream, "BroStats");
-	if ( status != NT_SUCCESS ) {
-		NT_ExplainError(status, errorBuffer, sizeof(errorBuffer));
-		Error(errorBuffer);
-		return;
-	}
-
-	// Read Statistics from Napatech API
-	nt_stat.cmd=NT_STATISTICS_READ_CMD_QUERY_V2;
-	nt_stat.u.query_v2.poll=0; // Get a new dataset
-	nt_stat.u.query_v2.clear=0; // Don't clear the counters
+	// s->dropped = 0;
 
 	status = NT_StatRead(stat_stream, &nt_stat);
 	if ( status != NT_SUCCESS ) {
@@ -162,12 +175,6 @@ void NapatechSource::Statistics(Stats* s)
 	s->dropped = nt_stat.u.query_v2.data.stream.streamid[stream_id].drop.pkts;
 	s->link = nt_stat.u.query_v2.data.stream.streamid[stream_id].forward.pkts;
 
-	status = NT_StatClose(stat_stream);
-	if ( status != NT_SUCCESS ) {
-                NT_ExplainError(status, errorBuffer, sizeof(errorBuffer));
-                Error(errorBuffer);
-                return;
-	}
 }
 
 iosource::PktSrc* NapatechSource::InstantiateNapatech(const std::string& path, bool is_live)
