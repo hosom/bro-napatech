@@ -10,8 +10,7 @@ extern "C" {
 #include <nt.h>
 #include <errno.h>
 
-
-#define _NSEC_PER_SEC 1000000000
+#define _NSEC_PER_SEC 100000000
 
 namespace iosource {
 namespace pktsrc {
