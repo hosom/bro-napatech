@@ -43,7 +43,7 @@ static inline struct timeval nt_timestamp_to_timeval(const int64_t ts_nanosec)
         tv.tv_sec = ts_nanosec / _NSEC_PER_SEC;
         //tv_nsec = (ts_nanosec % _NSEC_PER_SEC);
         //tv.tv_usec = tv_nsec / 1000;
-        tv.tv_usec = ((ts_nanosec % _NSEC_PER_SEC) / 100) + (pkt_ts % 100) > 50 ? 1 : 0;
+        tv.tv_usec = ((ts_nanosec % _NSEC_PER_SEC) / 100) + (ts_nanosec % 100) > 50 ? 1 : 0;
     }
 
     return tv;
