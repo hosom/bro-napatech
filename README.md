@@ -17,6 +17,21 @@ bro -N Bro::Napatech
 Bro::Napatech - Packet acquisition via Napatech NTAPI (dynamic, version 1.0)
 ```
 
+Configuration
+-------------
+
+In order to use the plugin, you'll have to modify your Napatech configuration. Set the following values within your **ntservice.ini**:
+
+```
+ ## These values are already defined within your ntservice.ini, so make sure you replace them, don't add new ones. 
+ PacketDescriptor = NT
+ TimestampFormat = NATIVE_UNIX
+```
+
+It is recommended that you comment out the ntpcap.ini completely so that it doesn't conflict with other configuration.
+
+Finally, you'll need to write an ntpl script to define the streams that you will use. 
+
 Usage
 -----
 
