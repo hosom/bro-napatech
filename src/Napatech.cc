@@ -2,6 +2,7 @@
 #include "bro-config.h"
 
 #include "Napatech.h"
+#include "Cache.h"
 #include <nt.h>
 
 using namespace iosource::pktsrc;
@@ -125,10 +126,20 @@ bool NapatechSource::ExtractNextPacket(Packet* pkt)
 			return false;
 		}
 
-		current_hdr.ts = nt_timestamp_to_timeval(NT_NET_GET_PKT_TIMESTAMP(packet_buffer));
-		current_hdr.caplen = NT_NET_GET_PKT_CAP_LENGTH(packet_buffer);
+		packet_desc = NT_NET_DESCR_PTR_DYN4(packet_buffer);
+		current_hdr.ts = nt_timestamp_to_timeval(packet_desc->timestamp);
+		current_hdr.caplen = packet_desc->capLength;
 		current_hdr.len = NT_NET_GET_PKT_WIRE_LENGTH(packet_buffer);
 		data = (unsigned char *) NT_NET_GET_PKT_L2_PTR(packet_buffer);
+
+		if ( deduplication_cache.exists(packet_desc->color1) ) {
+			// Drop the current frame, it's a duplicate according to the crc
+			// provided by the NIC
+			DoneWithPacket();
+			continue;
+		}
+		// Add the current crc value to the lru cache
+		deduplication_cache.add(packet_desc->color1, packet_desc->color1);
 
 		if ( ! ApplyBPFFilter(current_filter, &current_hdr, data) ) {
 			DoneWithPacket();
@@ -137,6 +148,7 @@ bool NapatechSource::ExtractNextPacket(Packet* pkt)
 
 		pkt->Init(props.link_type, &current_hdr.ts, current_hdr.caplen, current_hdr.len, data);
 		++stats.received;
+		stats.bytes_received += current_hdr.len;
 		return true;
 	}
 

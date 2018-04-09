@@ -9,6 +9,12 @@ extern "C" {
 
 #include <nt.h>
 #include <errno.h>
+#include <unordered_map>
+#include <list>
+#include <cstddef>
+#include <stdexcept>
+
+#include "Cache.h"
 
 #define _NSEC_PER_SEC 100000000
 
@@ -58,6 +64,11 @@ private:
 
 	NtNetStreamRx_t rx_stream; // Napatech stream
 	NtNetBuf_t packet_buffer; // Net buffer container. Packet data is returned in this when calling NT_NetRxGet().
+	NtDyn4Descr_t* packet_desc; // Current packet descriptor.
+
+	// deduplication_cache holds a buffer of crc values to compare the currrent frame to
+	// in order to look for duplicate frames seen on the wire
+	cache::lru<unsigned, unsigned> deduplication_cache = cache::lru<unsigned, unsigned>(100);
 
 	NtStatStream_t stat_stream; // Napatech statistics stream
 	NtStatistics_t nt_stat; // Napatech statistics data

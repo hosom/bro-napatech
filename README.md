@@ -28,6 +28,8 @@ In order to use the plugin, you'll have to modify your Napatech configuration. S
  TimestampFormat = NATIVE_UNIX
 ```
 
+**Note: in this version of bro-napatech, you must configure an ntpl script to create DYN4 packet descriptors.**
+
 It is recommended that you comment out the ntpcap.ini completely so that it doesn't conflict with other configuration.
 
 Finally, you'll need to write an ntpl script to define the streams that you will use. 
