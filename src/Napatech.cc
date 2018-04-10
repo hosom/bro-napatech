@@ -182,6 +182,7 @@ void NapatechSource::Statistics(Stats* s)
 {
 	// Grab the counter from this plugin for how much it has seen.
 	s->received = stats.received;
+	s->bytes_received = stats.bytes_received;
 
 	status = NT_StatRead(stat_stream, &nt_stat);
 	if ( status != NT_SUCCESS ) {
