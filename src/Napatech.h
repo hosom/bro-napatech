@@ -9,10 +9,6 @@ extern "C" {
 
 #include <nt.h>
 #include <errno.h>
-#include <unordered_map>
-#include <list>
-#include <cstddef>
-#include <stdexcept>
 
 #include "Cache.h"
 
