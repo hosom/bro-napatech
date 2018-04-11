@@ -1,0 +1,4 @@
+module Napatech;
+
+const dedupe_lru_size: count;
+const host_buffer_allowance: count;

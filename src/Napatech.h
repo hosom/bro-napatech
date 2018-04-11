@@ -10,7 +10,12 @@ extern "C" {
 #include <nt.h>
 #include <errno.h>
 
-#define _NSEC_PER_SEC 100000000
+#include "Cache.h"
+#include "Napatech.bif.h"
+
+// Napatech delivers timestamps in slices of 10ns. This is a convenience
+// to convert 10ns slices into seconds
+#define _NSEC_SLICE 100000000
 
 namespace iosource {
 namespace pktsrc {
@@ -58,6 +63,11 @@ private:
 
 	NtNetStreamRx_t rx_stream; // Napatech stream
 	NtNetBuf_t packet_buffer; // Net buffer container. Packet data is returned in this when calling NT_NetRxGet().
+	NtDyn4Descr_t* packet_desc; // Current packet descriptor.
+
+	// deduplication_cache holds a buffer of crc values to compare the currrent frame to
+	// in order to look for duplicate frames seen on the wire
+	cache::lru<unsigned, unsigned> deduplication_cache = cache::lru<unsigned, unsigned>(BifConst::Napatech::dedupe_lru_size);
 
 	NtStatStream_t stat_stream; // Napatech statistics stream
 	NtStatistics_t nt_stat; // Napatech statistics data

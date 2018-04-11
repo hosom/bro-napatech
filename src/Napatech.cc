@@ -2,6 +2,8 @@
 #include "bro-config.h"
 
 #include "Napatech.h"
+#include "Napatech.bif.h"
+#include "Cache.h"
 #include <nt.h>
 
 using namespace iosource::pktsrc;
@@ -32,18 +34,15 @@ NapatechSource::NapatechSource(const std::string& path, bool is_live, const std:
         }
 }
 
-static inline struct timeval nt_timestamp_to_timeval(const int64_t ts_nanosec)
+static inline struct timeval nt_timestamp_to_timeval(const int64_t ts)
 {
     struct timeval tv;
-    long tv_nsec;
 
-    if (ts_nanosec == 0) {
+    if (ts == 0) {
         return (struct timeval) { 0, 0 };
     } else {
-        tv.tv_sec = ts_nanosec / _NSEC_PER_SEC;
-        //tv_nsec = (ts_nanosec % _NSEC_PER_SEC);
-        //tv.tv_usec = tv_nsec / 1000;
-        tv.tv_usec = ((ts_nanosec % _NSEC_PER_SEC) / 100) + (ts_nanosec % 100) > 50 ? 1 : 0;
+        tv.tv_sec = ts / _NSEC_SLICE;
+		tv.tv_usec = ( ts % _NSEC_SLICE ) / 100;
     }
 
     return tv;
@@ -53,7 +52,7 @@ void NapatechSource::Open()
 {
 	// Last argument is the HBA - Host Buffer Allowance, or the amount of the Host Buffer that
 	// can be held back. Need to createa  BIF to configure this.
-	status = NT_NetRxOpen(&rx_stream, "BroStream", NT_NET_INTERFACE_PACKET, stream_id, 100);
+	status = NT_NetRxOpen(&rx_stream, "BroStream", NT_NET_INTERFACE_PACKET, stream_id, BifConst::Napatech::host_buffer_allowance);
 	if ( status != NT_SUCCESS) {
 		Info("Failed to open stream");
 		NT_ExplainError(status, errorBuffer, sizeof(errorBuffer));
@@ -125,10 +124,20 @@ bool NapatechSource::ExtractNextPacket(Packet* pkt)
 			return false;
 		}
 
-		current_hdr.ts = nt_timestamp_to_timeval(NT_NET_GET_PKT_TIMESTAMP(packet_buffer));
-		current_hdr.caplen = NT_NET_GET_PKT_CAP_LENGTH(packet_buffer);
+		packet_desc = NT_NET_DESCR_PTR_DYN4(packet_buffer);
+		current_hdr.ts = nt_timestamp_to_timeval(packet_desc->timestamp);
+		current_hdr.caplen = packet_desc->capLength;
 		current_hdr.len = NT_NET_GET_PKT_WIRE_LENGTH(packet_buffer);
 		data = (unsigned char *) NT_NET_GET_PKT_L2_PTR(packet_buffer);
+
+		if ( deduplication_cache.exists(packet_desc->color1) ) {
+			// Drop the current frame, it's a duplicate according to the crc
+			// provided by the NIC
+			DoneWithPacket();
+			continue;
+		}
+		// Add the current crc value to the lru cache
+		deduplication_cache.add(packet_desc->color1, packet_desc->color1);
 
 		if ( ! ApplyBPFFilter(current_filter, &current_hdr, data) ) {
 			DoneWithPacket();
@@ -137,6 +146,7 @@ bool NapatechSource::ExtractNextPacket(Packet* pkt)
 
 		pkt->Init(props.link_type, &current_hdr.ts, current_hdr.caplen, current_hdr.len, data);
 		++stats.received;
+		stats.bytes_received += current_hdr.len;
 		return true;
 	}
 
@@ -170,6 +180,7 @@ void NapatechSource::Statistics(Stats* s)
 {
 	// Grab the counter from this plugin for how much it has seen.
 	s->received = stats.received;
+	s->bytes_received = stats.bytes_received;
 
 	status = NT_StatRead(stat_stream, &nt_stat);
 	if ( status != NT_SUCCESS ) {
