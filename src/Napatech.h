@@ -11,6 +11,7 @@ extern "C" {
 #include <errno.h>
 
 #include "Cache.h"
+#include "Napatech.bif.h"
 
 // Napatech delivers timestamps in slices of 10ns. This is a convenience
 // to convert 10ns slices into seconds
@@ -66,7 +67,7 @@ private:
 
 	// deduplication_cache holds a buffer of crc values to compare the currrent frame to
 	// in order to look for duplicate frames seen on the wire
-	cache::lru<unsigned, unsigned> deduplication_cache = cache::lru<unsigned, unsigned>(100);
+	cache::lru<unsigned, unsigned> deduplication_cache = cache::lru<unsigned, unsigned>(BifConst::Napatech::dedupe_lru_size);
 
 	NtStatStream_t stat_stream; // Napatech statistics stream
 	NtStatistics_t nt_stat; // Napatech statistics data

@@ -2,6 +2,7 @@
 #include "bro-config.h"
 
 #include "Napatech.h"
+#include "Napatech.bif.h"
 #include "Cache.h"
 #include <nt.h>
 
@@ -41,7 +42,7 @@ static inline struct timeval nt_timestamp_to_timeval(const int64_t ts)
         return (struct timeval) { 0, 0 };
     } else {
         tv.tv_sec = ts / _NSEC_SLICE;
-		tv.tv_usec = ( ts % _NSEC_SLICE ) / 100 
+		tv.tv_usec = ( ts % _NSEC_SLICE ) / 100;
     }
 
     return tv;
@@ -51,7 +52,7 @@ void NapatechSource::Open()
 {
 	// Last argument is the HBA - Host Buffer Allowance, or the amount of the Host Buffer that
 	// can be held back. Need to createa  BIF to configure this.
-	status = NT_NetRxOpen(&rx_stream, "BroStream", NT_NET_INTERFACE_PACKET, stream_id, 100);
+	status = NT_NetRxOpen(&rx_stream, "BroStream", NT_NET_INTERFACE_PACKET, stream_id, BifConst::Napatech::host_buffer_allowance);
 	if ( status != NT_SUCCESS) {
 		Info("Failed to open stream");
 		NT_ExplainError(status, errorBuffer, sizeof(errorBuffer));
