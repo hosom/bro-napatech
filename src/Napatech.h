@@ -12,7 +12,9 @@ extern "C" {
 
 #include "Cache.h"
 
-#define _NSEC_PER_SEC 100000000
+// Napatech delivers timestamps in slices of 10ns. This is a convenience
+// to convert 10ns slices into seconds
+#define _NSEC_SLICE 100000000
 
 namespace iosource {
 namespace pktsrc {

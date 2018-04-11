@@ -33,18 +33,15 @@ NapatechSource::NapatechSource(const std::string& path, bool is_live, const std:
         }
 }
 
-static inline struct timeval nt_timestamp_to_timeval(const int64_t ts_nanosec)
+static inline struct timeval nt_timestamp_to_timeval(const int64_t ts)
 {
     struct timeval tv;
-    long tv_nsec;
 
-    if (ts_nanosec == 0) {
+    if (ts == 0) {
         return (struct timeval) { 0, 0 };
     } else {
-        tv.tv_sec = ts_nanosec / _NSEC_PER_SEC;
-        //tv_nsec = (ts_nanosec % _NSEC_PER_SEC);
-        //tv.tv_usec = tv_nsec / 1000;
-        tv.tv_usec = ((ts_nanosec % _NSEC_PER_SEC) / 100) + (ts_nanosec % 100) > 50 ? 1 : 0;
+        tv.tv_sec = ts / _NSEC_SLICE;
+		tv.tv_usec = ( ts % _NSEC_SLICE ) / 100 
     }
 
     return tv;
