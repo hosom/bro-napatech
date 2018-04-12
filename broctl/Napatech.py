@@ -31,6 +31,7 @@ class Napatech(BroControl.plugin.Plugin):
 
     def broctl_config(self):
 
+        script = ''
         script += '# Settings for configuring Napatech interractions'
         script += '\nredef Napatech::dedupe_lru_size = {0};'.format(self.getOption('dedupe_lru_size'))
         script += '\nredef Napatech::host_buffer_allowance = {0};'.format(self.getOption('host_buffer_allowance'))
