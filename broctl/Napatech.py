@@ -28,7 +28,7 @@ class Napatech(BroControl.plugin.Plugin):
 
         return [('enable_software_deduplication', 'bool', True, 'Whether or not to use software packet deduplication.'),
                 ('dedupe_lru_size', 'int', 1024, 'Size of deduplication lru.'),
-                ('host_buffer_allowance', 'int', 100, 'Host buffer allowance.'))]
+                ('host_buffer_allowance', 'int', 100, 'Host buffer allowance.')]
 
     def broctl_config(self):
 
