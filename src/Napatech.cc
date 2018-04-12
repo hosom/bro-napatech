@@ -125,19 +125,21 @@ bool NapatechSource::ExtractNextPacket(Packet* pkt)
 		}
 
 		packet_desc = NT_NET_DESCR_PTR_DYN4(packet_buffer);
+		if ( BifConst::Napatech::enable_software_deduplication ) {
+			if ( deduplication_cache.exists(packet_desc->color1) ) {
+				// Drop the current frame, it's a duplicate according to the crc
+				// provided by the NIC
+				DoneWithPacket();
+				continue;
+			// Add the current crc value to the lru cache
+			deduplication_cache.add(packet_desc->color1, packet_desc->color1);
+			}
+		}
+
 		current_hdr.ts = nt_timestamp_to_timeval(packet_desc->timestamp);
 		current_hdr.caplen = packet_desc->capLength;
 		current_hdr.len = NT_NET_GET_PKT_WIRE_LENGTH(packet_buffer);
 		data = (unsigned char *) NT_NET_GET_PKT_L2_PTR(packet_buffer);
-
-		if ( deduplication_cache.exists(packet_desc->color1) ) {
-			// Drop the current frame, it's a duplicate according to the crc
-			// provided by the NIC
-			DoneWithPacket();
-			continue;
-		}
-		// Add the current crc value to the lru cache
-		deduplication_cache.add(packet_desc->color1, packet_desc->color1);
 
 		if ( ! ApplyBPFFilter(current_filter, &current_hdr, data) ) {
 			DoneWithPacket();

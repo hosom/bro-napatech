@@ -1,4 +1,5 @@
 module Napatech;
 
+const enable_software_deduplication: bool;
 const dedupe_lru_size: count;
 const host_buffer_allowance: count;
