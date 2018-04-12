@@ -131,9 +131,9 @@ bool NapatechSource::ExtractNextPacket(Packet* pkt)
 				// provided by the NIC
 				DoneWithPacket();
 				continue;
+			}
 			// Add the current crc value to the lru cache
 			deduplication_cache.add(packet_desc->color1, packet_desc->color1);
-			}
 		}
 
 		current_hdr.ts = nt_timestamp_to_timeval(packet_desc->timestamp);
