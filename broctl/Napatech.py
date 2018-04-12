@@ -34,7 +34,10 @@ class Napatech(BroControl.plugin.Plugin):
 
         script = ''
         script += '# Settings for configuring Napatech interractions'
-        script += '\nredef Napatech::enable_software_deduplication = {0};'.format(self.getOption('enable_software_deduplication'))
+        if self.getOption('enable_software_deduplication'):
+            script += '\nredef Napatech::enable_software_deduplication = T;'
+        else:
+            script += '\nredef Napatech::enable_software_deduplication = F;'
         script += '\nredef Napatech::dedupe_lru_size = {0};'.format(self.getOption('dedupe_lru_size'))
         script += '\nredef Napatech::host_buffer_allowance = {0};'.format(self.getOption('host_buffer_allowance'))
         
