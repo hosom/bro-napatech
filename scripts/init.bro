@@ -3,6 +3,9 @@
 module Napatech;
 
 export {
+    ## Should the plugin try to deduplicate packets with the color1
+    ## value of the DYN4 packet descriptor?
+    const enable_software_deduplication = T &redef;
     ## The size of the software deduplication lru cache
     const dedupe_lru_size = 1024 &redef;
     ## Because applications can share streams, the Host Buffer Allowance
